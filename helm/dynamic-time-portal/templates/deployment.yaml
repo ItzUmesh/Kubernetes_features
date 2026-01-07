@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dynamic-time-portal.fullname" . }}
+  labels:
+    app: {{ include "dynamic-time-portal.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "dynamic-time-portal.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "dynamic-time-portal.name" . }}
+    spec:
+      containers:
+        - name: {{ include "dynamic-time-portal.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5000
+          env:
+            - name: ORACLE_USER
+              value: "{{ .Values.oracle.user | default "" }}"
+            - name: ORACLE_PASSWORD
+              value: "{{ .Values.oracle.password | default "" }}"
+            - name: ORACLE_DSN
+              value: "{{ .Values.oracle.dsn | default "" }}"
+            # Environment variables provided to the container. These
+            # are optional and used if you want the pod to connect to
+            # an Oracle database. Set them in `values.yaml` or via
+            # `--set` during install/upgrade.

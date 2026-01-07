@@ -1,0 +1,7 @@
+Thank you for installing Dynamic Time Portal.
+
+To access the service run these commands (example for port-forward):
+
+  kubectl port-forward svc/{{ include "dynamic-time-portal.fullname" . }} 5000:5000
+
+Then open http://localhost:5000
