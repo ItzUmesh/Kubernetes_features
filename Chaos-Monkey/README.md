@@ -1,4 +1,3 @@
-
 # Chaos Monkey — Kubernetes Pod Deletion Example
 
 ## Overview
