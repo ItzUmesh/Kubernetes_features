@@ -1,105 +1,141 @@
-# PROCEDURE — Run / Test / Observe / Stop
 
-This procedure walks a beginner through running the app, exercising the chaos script,
-observing Kubernetes behavior, and stopping/cleaning up.
+# PROCEDURE (Manual) — Run / Test / Observe / Stop
 
-Prerequisites
-- `kubectl` configured to point at your cluster (or minikube/kind). Use `kubectl cluster-info`.
-- `docker`, `kind`, or `minikube` available locally if you plan to build and load images.
+This file describes a manual, step-by-step procedure for beginners. It assumes you will perform each action by hand and inspect results before moving to the next step.
 
-1) Run — build image and deploy
+## Prerequisites (manual checks)
+- Confirm `kubectl` is installed and your context points to the intended cluster:
+  ```bash
+  kubectl cluster-info
+  kubectl config current-context
+  ```
+- Confirm you can run simple commands against the cluster:
+  ```bash
+  kubectl get nodes
+  kubectl get namespaces
+  ```
+- If you plan to build locally, ensure `docker` (or `kind`/`minikube`) is installed and usable.
 
-- Build the image locally:
+---
 
+## 1) Run — build and deploy (manual steps)
+
+### Step A — Build the container image locally
 ```bash
+cd <path-to-repo-root>
 docker build -t chaos-monkey-app:latest -f ./app/Dockerfile ./app
+# Verify image exists locally
+docker images | grep chaos-monkey-app
 ```
 
-- Load the image into your local cluster if needed:
+### Step B — Make the image available to your cluster
+- For kind:
+  ```bash
+  kind load docker-image chaos-monkey-app:latest
+  ```
+- For minikube:
+  ```bash
+  eval $(minikube docker-env)
+  docker build -t chaos-monkey-app:latest ./app
+  ```
+- For remote clusters: tag and push the image to a registry you can access from the cluster.
 
-For kind:
-```bash
-kind load docker-image chaos-monkey-app:latest
-```
-
-For minikube:
-```bash
-eval $(minikube docker-env)
-docker build -t chaos-monkey-app:latest ./app
-```
-
-- Deploy the app to Kubernetes:
-
+### Step C — Deploy manifests and confirm deployment creation
 ```bash
 kubectl apply -f ./k8s/deployment.yaml
 kubectl apply -f ./k8s/service.yaml
+# Verify pods begin to appear
 kubectl get pods -l app=chaos-monkey
 ```
+Pause and inspect the pod list and events. If pods are not starting, run `kubectl describe pod <pod>` and resolve errors before continuing.
 
-2) Test — confirm the app is serving
+---
 
-- Check pods and logs:
+## 2) Test — manual verification the app is serving
 
+### Step A — Check pod logs for startup errors
 ```bash
-kubectl get pods -l app=chaos-monkey
-kubectl logs -l app=chaos-monkey --tail=50
+kubectl logs <pod-name>
+kubectl logs -l app=chaos-monkey --tail=100
 ```
 
-- If you have a ClusterIP service, port-forward to test locally:
+### Step B — Access the service manually
+- If your Service is ClusterIP:
+  ```bash
+  kubectl port-forward svc/chaos-monkey-service 8080:80
+  # In another terminal
+  curl http://127.0.0.1:8080/
+  ```
+- If NodePort or LoadBalancer, use the external address and port.
+Confirm the response contains the `hostname` field so you can identify the serving pod.
 
-```bash
-kubectl port-forward svc/chaos-monkey-service 8080:80
-# In another terminal:
-curl http://127.0.0.1:8080/
-```
+---
 
-3) Observe test case — run the chaos script and watch behavior
+## 3) Observe — manually run chaos and watch behavior
 
-- Start the chaos script (will loop until stopped):
-
+### Step A — Start the chaos script
 ```bash
 chmod +x ./chaos/chaos-monkey.sh
 ./chaos/chaos-monkey.sh --namespace default --label app=chaos-monkey --interval 5
 ```
+Keep this terminal open so you can observe which pod names are being deleted.
 
-- In another terminal watch pods get deleted and recreated:
-
+### Step B — Watch pod lifecycle and events
 ```bash
 kubectl get pods -l app=chaos-monkey -w
-```
-
-- To inspect an event or reason for restarts or image pull failures use:
-
-```bash
-kubectl describe pod <pod-name> -n default
 kubectl get events -n default --sort-by=.metadata.creationTimestamp
 ```
+When a pod is deleted by the script, confirm a new pod is created by the Deployment. Record:
+- Which pod names were deleted
+- How long until replacements appeared
+- Any error events in `kubectl describe pod <new-pod>`
 
-4) Stop — end the chaos run and clean up
+---
 
-- Stop the chaos script with Ctrl-C in the terminal running it.
-- Confirm pods return to the desired replica count:
+## 4) Stop — end manual test and clean up
 
+### Step A — Stop the chaos script
+- Press Ctrl-C in the script terminal.
+
+### Step B — Verify Deployment stabilizes
 ```bash
 kubectl get pods -l app=chaos-monkey
+kubectl describe deployment chaos-monkey-deployment
 ```
 
-- Optional cleanup (remove app from cluster):
-
+### Step C — Optional cleanup
 ```bash
 kubectl delete -f ./k8s/deployment.yaml
 kubectl delete -f ./k8s/service.yaml
 ```
 
-Troubleshooting common problems
+---
 
-- Image pull errors (`ErrImagePull`, `ImagePullBackOff`):
-  - Confirm the image name and tag in `k8s/deployment.yaml` match a pushed or loaded image.
-  - For private registries, create an `imagePullSecret` and reference it in the pod spec.
-  - Inspect `kubectl describe pod <pod>` for the exact error message (e.g., `manifest unknown`, `unauthorized`).
+## Troubleshooting (manual checks)
 
-- Script errors or missing `kubectl`: ensure `kubectl` is on PATH and your kubeconfig points to the intended cluster.
+### Image pull errors (`ErrImagePull` / `ImagePullBackOff`)
+- Run:
+  ```bash
+  kubectl describe pod <pod-name>
+  ```
+- If you see:
+  - `pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed`
+    - The image is not present in the registry or is private.
+    - Solution: For kind/minikube, load the image as above. For remote clusters, push the image to a registry and update the deployment manifest.
+  - `unauthorized`: create an `imagePullSecret` and reference it in the deployment YAML.
+  - `manifest unknown`: verify image name and tag are correct in `deployment.yaml` and that the image exists in the registry.
 
-- If pods are stuck terminating or not recreating: check the Deployment's `replicas` value and `kubectl describe deployment` for errors.
+### Networking/DNS issues
+- Try:
+  ```bash
+  kubectl exec -it <pod> -- nslookup registry.example.com
+  # or
+  kubectl exec -it <pod> -- curl -v registry.example.com
+  ```
 
-If you want, I can: (a) run these steps against a local kind/minikube cluster, or (b) help you add an `imagePullSecret` to the deployment. Which would you like? 
+### General advice
+- If you are uncertain, record commands and outputs and seek help; do not proceed until the core issue (image pull or crash) is resolved.
+
+---
+
+**This procedure is intentionally manual: perform each step, inspect outputs, and confirm expected state before moving on.**
