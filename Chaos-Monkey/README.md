@@ -35,13 +35,23 @@ This project demonstrates Kubernetes self-healing by running a simple web app in
 	kubectl apply -f ./k8s/service.yaml
 	kubectl get pods -l app=chaos-monkey
 	```
-4. Run the chaos script:
+4. Access the web service (in one terminal):
+	```bash
+	kubectl port-forward svc/chaos-monkey-service 9090:80
+	```
+5. Test the app (in another terminal):
+	```bash
+	curl http://127.0.0.1:9090/
+	```
+	Run multiple times to see different pod hostnames (load balancing).
+
+6. Run the chaos script (in a new terminal):
 	```bash
 	chmod +x ./chaos/chaos-monkey.sh
 	./chaos/chaos-monkey.sh --namespace default --label app=chaos-monkey --interval 5
 	```
-5. Observe pods being deleted and recreated. Stop the script with Ctrl-C.
-6. For full details, troubleshooting, and manual checks, see `PROCEDURE.md`.
+7. Observe pods being deleted and recreated. Stop the script with Ctrl-C.
+8. For full details, troubleshooting, and manual checks, see `PROCEDURE.md`.
 
 ## Troubleshooting
 - If pods are stuck in `ImagePullBackOff` or `ErrImagePull`, see the troubleshooting section in `PROCEDURE.md` for step-by-step fixes (image not loaded, private registry, wrong tag, etc).

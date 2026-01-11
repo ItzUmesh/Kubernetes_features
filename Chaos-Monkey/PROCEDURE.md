@@ -127,24 +127,50 @@ You should see Flask startup messages. If there are errors, check individual pod
 kubectl logs <pod-name>
 ```
 
-### Step B — Port-forward to the service
+### Step B — Set up port-forwarding to the service
 In one terminal, run:
 ```bash
-kubectl port-forward svc/chaos-monkey-service 8080:80
+kubectl port-forward svc/chaos-monkey-service 9090:80
 ```
 
-### Step C — Test the endpoint
-In a different terminal, run:
+You should see output like:
+```
+Forwarding from 127.0.0.1:9090 -> 8080
+Forwarding from [::1]:9090 -> 8080
+Handling connection for 9090
+```
+
+**Note:** Keep this terminal open. The port-forward will continue running in the foreground.
+
+### Step C — Access the web service (in another terminal)
+Open a new terminal and test the web service by accessing it in your browser or with curl:
+
+**Option 1 — Using curl (recommended for testing):**
 ```bash
-curl http://127.0.0.1:8080/
+curl http://127.0.0.1:9090/
 ```
 
+**Option 2 — Using a web browser:**
+Navigate to:
+```
+http://127.0.0.1:9090/
+```
+
+### Step D — Verify the response
 You should see a JSON response like:
 ```json
-{"hostname":"chaos-monkey-deployment-654f86cd76-h794g"}
+{"hostname":"chaos-monkey-deployment-654f86cd76-5dqct","message":"Hello from Chaos Monkey app"}
 ```
 
-The hostname shows which pod is serving the request. This confirms the app is working.
+The `hostname` field shows which pod is currently serving your request. This confirms the app is working correctly.
+
+### Step E — Test load balancing across pods
+Run curl multiple times to see different pods serving requests:
+```bash
+for i in {1..6}; do curl http://127.0.0.1:9090/ && echo ""; done
+```
+
+You should see different pod hostnames in each response, proving that requests are being load-balanced across the three replicas.
 
 ---
 
@@ -281,21 +307,28 @@ This stops all chaos-monkey pods and removes the service.
 
 ### kubectl port-forward connection refused
 
-**Symptom:** `curl http://127.0.0.1:8080/` returns "Connection refused" or times out.
+**Symptom:** `curl http://127.0.0.1:9090/` returns "Connection refused" or times out.
 
 **Solution:**
-- Ensure port-forward is still running in its terminal:
-  ```bash
-  kubectl port-forward svc/chaos-monkey-service 8080:80
-  ```
-- In a different terminal, test:
-  ```bash
-  curl -v http://127.0.0.1:8080/
-  ```
-- If still failing, check if pods are running:
-  ```bash
-  kubectl get pods -l app=chaos-monkey
-  ```
+1. Ensure port-forward is still running in its terminal:
+   ```bash
+   kubectl port-forward svc/chaos-monkey-service 9090:80
+   ```
+   Keep this terminal open and do not close it while testing.
+
+2. In a different terminal, test with verbose output:
+   ```bash
+   curl -v http://127.0.0.1:9090/
+   ```
+
+3. If still failing, check if pods are running:
+   ```bash
+   kubectl get pods -l app=chaos-monkey
+   ```
+
+4. If the port is already in use, either:
+   - Kill the existing process: `sudo lsof -i :9090` and note the PID, then `kill <PID>`
+   - Or use a different port: `kubectl port-forward svc/chaos-monkey-service 9091:80`
 
 ### Full reset if nothing works
 
