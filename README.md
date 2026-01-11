@@ -4,9 +4,9 @@ Three focused Kubernetes labs that demonstrate core platform behaviors end-to-en
 
 ## Projects
 
-- [Chaos-Monkey/README.md](Chaos-Monkey/README.md) — Delete pods at random and watch the Deployment replace them while the Service keeps traffic flowing.
-- [Resource-Limiter/README.md](Resource-Limiter/README.md) — Push requests/limits and quotas to trigger throttling or OOMs, then inspect how Kubernetes reports and recovers.
-- [Multi-Replica-Web-Server/README.md](Multi-Replica-Web-Server/README.md) — Drive traffic through a Service to see 5 replicas share load and pinpoint which pod served each response.
+- [Chaos-Monkey — Kubernetes Pod Deletion Example](Chaos-Monkey/README.md) — Delete pods at random and watch the Deployment replace them while the Service keeps traffic flowing.
+- [Resource-Limiter — Kubernetes Resource Limits & Quotas Demo](Resource-Limiter/README.md) — Push requests/limits and quotas to trigger throttling or OOMs, then inspect how Kubernetes reports and recovers.
+- [Multi-Replica-Web-Server — Kubernetes Load Balancing Demo](Multi-Replica-Web-Server/README.md) — Drive traffic through a Service to see 5 replicas share load and pinpoint which pod served each response.
 
 ## Getting Around
 
