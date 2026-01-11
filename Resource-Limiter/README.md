@@ -1,5 +1,7 @@
 # Resource Limiter — Kubernetes Resource Limits & Quotas Demo
 
+**Description:** Explore resource governance through requests, limits, and quotas. Trigger throttling and OOM scenarios in a controlled lab to understand how Kubernetes enforces resource boundaries.
+
 Hands-on lab for requests, limits, and quotas: see how scheduling decisions are made, feel CPU throttling under load, and watch pods either restart or get OOMKilled when memory budgets are exceeded.
 
 ## What This Project Teaches
