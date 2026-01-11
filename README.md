@@ -20,7 +20,7 @@ Learn how to keep code and configuration separate.
 5. Dynamic Theme App: A web app that changes its background color based on a ConfigMap.
 
 6. Secure API Proxy: A small app that fetches data from a private API using an API key stored in a Kubernetes Secret.
-
+-------------------------------------------------------To Be Continued. ------------------------------------------------------------------------
 7. Environment Switcher: Use one YAML file to deploy "Dev" or "Prod" versions using Kustomize.
 
 3. State & Storage (The Hard Part)
