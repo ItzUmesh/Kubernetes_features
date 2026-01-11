@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: resource-limiter-quota
+  namespace: resource-limiter
+spec:
+  # Hard limits for the entire namespace
+  hard:
+    requests.memory: "512Mi"      # Total memory requested by all pods in namespace
+    requests.cpu: "500m"          # Total CPU requested by all pods in namespace
+    limits.memory: "1Gi"          # Total memory limit for all pods in namespace
+    limits.cpu: "1000m"           # Total CPU limit for all pods in namespace
+    pods: "10"                    # Max number of pods in namespace
+  
+  # Scope: only apply quota to pods with specific scope selectors
+  scopeSelector:
+    matchExpressions:
+      - operator: In
+        scopeName: PriorityClass
+        values: ["default"]

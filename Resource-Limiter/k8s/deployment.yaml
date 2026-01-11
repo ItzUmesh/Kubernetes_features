@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: resource-limiter
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-limiter-deployment
+  namespace: resource-limiter
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: memory-limiter
+  template:
+    metadata:
+      labels:
+        app: memory-limiter
+    spec:
+      containers:
+        - name: memory-limiter
+          image: memory-limiter-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          
+          # Resource requests: Kubernetes reserves this much for the pod
+          # If the node doesn't have this available, the pod won't be scheduled
+          resources:
+            requests:
+              memory: "64Mi"     # Request 64 MB
+              cpu: "100m"        # Request 0.1 CPU
+            
+            # Resource limits: Kubernetes will throttle or kill the pod if it exceeds these
+            # Memory limit: pod will be OOMKilled if it exceeds this
+            # CPU limit: pod will be throttled if it exceeds this
+            limits:
+              memory: "256Mi"    # Limit to 256 MB (can allocate max ~200 MB safely)
+              cpu: "500m"        # Limit to 0.5 CPU
+          
+          # Liveness probe: restart pod if app becomes unresponsive
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          
+          # Readiness probe: remove pod from service if not ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          
+          # Set environment variable with hostname for logging
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
