@@ -1,7 +1,5 @@
 # Multi-Replica Web Server — Kubernetes Load Balancing Demo
 
-Demonstrate real Service-level load balancing: send traffic to 5 replicas, confirm exactly which pod serves each request, and see why port-forwarding hides the balanced path.
-
 ---
 
 ## 🎯 What This Project Teaches

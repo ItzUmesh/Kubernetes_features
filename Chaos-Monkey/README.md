@@ -1,7 +1,5 @@
 # Chaos Monkey — Kubernetes Pod Deletion Example
 
-Deploy a tiny Flask app, then run a chaos script that deletes pods at random to watch Kubernetes auto-recover: the Deployment respawns pods and the Service endpoint stays reachable the whole time.
-
 ## Overview
 You’ll practice inducing failures on purpose, watching replacements come up, confirming the Service never breaks, and reading events/logs to understand the self-healing loop.
 
