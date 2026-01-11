@@ -1,9 +1,9 @@
 # Chaos Monkey — Kubernetes Pod Deletion Example
 
-Run a simple web app on Kubernetes, then use a chaos script that randomly deletes pods to watch the Deployment self-heal.
+Run a simple web app on Kubernetes, then unleash a chaos script that randomly deletes pods so you can watch the Deployment self-heal.
 
 ## Overview
-This project demonstrates Kubernetes self-healing by running a simple web app in a Deployment and using a "Chaos Monkey" script to randomly delete pods. Kubernetes will automatically recreate deleted pods, letting you observe its resilience in action.
+See Kubernetes resilience in action: a Deployment keeps pods alive while a "Chaos Monkey" deletes them at random; the control plane brings them right back.
 
 ## Features
 - Minimal Flask web app that returns its pod hostname (see `app/`).

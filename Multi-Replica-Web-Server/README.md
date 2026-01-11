@@ -1,6 +1,6 @@
 # Multi-Replica Web Server — Kubernetes Load Balancing Demo
 
-**Welcome!** This is a beginner-friendly project to understand how Kubernetes distributes traffic across multiple copies (replicas) of an app.
+See how a Kubernetes Service spreads traffic across 5 replicas, which pod handled your request, and why port-forwarding shows only one.
 
 ---
 

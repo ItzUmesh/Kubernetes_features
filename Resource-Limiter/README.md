@@ -1,14 +1,14 @@
 # Resource Limiter — Kubernetes Resource Limits & Quotas Demo
 
-A Kubernetes learning project demonstrating how to set resource limits and requests, and how Kubernetes handles containers that exceed their limits.
+Learn how requests, limits, and quotas shape pod behavior — and what happens when a container blows past its budget.
 
 ## What This Project Teaches
 
-1. **Resource Requests** — Tell Kubernetes the minimum resources a pod needs
-2. **Resource Limits** — Tell Kubernetes the maximum resources a pod can consume
-3. **Throttling** — How Kubernetes throttles CPU-heavy containers
-4. **OOMKilled** — What happens when a container exceeds its memory limit
-5. **Resource Quotas** — How to enforce resource constraints at the namespace level
+1. **Resource Requests** — Minimum needed to schedule
+2. **Resource Limits** — Maximum allowed before throttling/kill
+3. **Throttling** — CPU capping under load
+4. **OOMKilled** — Behavior when memory limits are exceeded
+5. **Resource Quotas** — Namespace-wide guardrails
 
 ## Project Structure
 
@@ -29,7 +29,7 @@ Resource-Limiter/
 
 ## The Memory Limiter App
 
-A Flask application that allows you to:
+A Flask app that lets you:
 
 - **View current memory usage** — GET `/` or `/memory`
 - **Allocate memory on-demand** — POST `/allocate?mb=100`
