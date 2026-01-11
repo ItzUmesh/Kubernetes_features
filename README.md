@@ -1,12 +1,12 @@
 # Kubernetes Features — Demo Suite
 
-Three focused Kubernetes labs to explore core platform behaviors: resilience under pod failure, resource governance with requests/limits/quotas, and real Service-level load balancing. Each folder includes a runnable app, manifests, and a guided procedure so you can reproduce the scenarios yourself.
+Three focused Kubernetes labs that demonstrate core platform behaviors end-to-end: resilience when pods are killed, resource governance with requests/limits/quotas, and real Service-level load balancing across replicas. Each folder includes a runnable app, Kubernetes manifests, and a guided procedure so you can reproduce and observe the behaviors yourself.
 
 ## Projects
 
-- [Chaos-Monkey/README.md](Chaos-Monkey/README.md) — Trigger random pod deletions and watch Deployments and Services keep the app reachable.
-- [Resource-Limiter/README.md](Resource-Limiter/README.md) — Push requests/limits and quotas to see scheduling, throttling, and OOM restarts in a controlled lab.
-- [Multi-Replica-Web-Server/README.md](Multi-Replica-Web-Server/README.md) — Send traffic through a Service to observe 5 replicas sharing load and identify which pod handled each call.
+- [Chaos-Monkey/README.md](Chaos-Monkey/README.md) — Delete pods at random and watch the Deployment replace them while the Service keeps traffic flowing.
+- [Resource-Limiter/README.md](Resource-Limiter/README.md) — Push requests/limits and quotas to trigger throttling or OOMs, then inspect how Kubernetes reports and recovers.
+- [Multi-Replica-Web-Server/README.md](Multi-Replica-Web-Server/README.md) — Drive traffic through a Service to see 5 replicas share load and pinpoint which pod served each response.
 
 ## Getting Around
 
