@@ -46,6 +46,8 @@ docker images | grep memory-limiter-app
 
 You should see `memory-limiter-app:latest` listed.
 
+Note: The container now runs the Flask app as PID 1 (via `python app.py`). This ensures the process exits cleanly and the pod restarts when memory crosses the threshold.
+
 ---
 
 ## 2) LOAD — Load image into kind cluster
@@ -64,6 +66,8 @@ Example:
 ```bash
 kind load docker-image memory-limiter-app:latest --name kind
 ```
+
+If you rebuild the image later, repeat this `kind load` step so the cluster uses your latest local image.
 
 ---
 
@@ -99,6 +103,16 @@ kubectl get resourcequota -n resource-limiter
 
 All pods should show `READY 1/1` and `STATUS Running` within 10-15 seconds.
 
+Optional: configure the memory threshold used by the app with an environment variable in `deployment.yaml`:
+
+```yaml
+env:
+   - name: MEMORY_THRESHOLD_MB
+      value: "230"
+```
+
+By default the app uses 230 MB. When RSS exceeds this threshold, `/health` returns 503 and a background monitor exits the process to trigger a pod restart.
+
 ---
 
 ## 4) TEST — Test resource limits
@@ -128,6 +142,14 @@ curl http://localhost:8080/memory | jq '.'
 ```
 
 Note the `rss_mb` (actual memory used).
+
+Tip (target a single pod): the Service load-balances across the two replicas. If you want to stress and observe restarts on one specific pod, port-forward directly to a pod in another terminal:
+
+```bash
+POD=$(kubectl get pod -n resource-limiter -l app=memory-limiter -o jsonpath='{.items[0].metadata.name}')
+kubectl port-forward -n resource-limiter pod/$POD 9090:5000
+```
+Use `http://localhost:9090` for requests to the targeted pod.
 
 ---
 
@@ -165,9 +187,9 @@ sleep 3
 curl -X POST http://localhost:8080/allocate?mb=50 | jq '.'
 ```
 
-### Step C — Observe what happens at the memory limit
+### Step C — Observe health failures and restarts
 
-The pod has a 256 MB memory limit. Keep allocating until you reach ~200 MB.
+The pod has a 256 MB Kubernetes memory limit, and the app’s internal threshold defaults to 230 MB.
 
 **Expected behavior:**
 
@@ -176,17 +198,18 @@ The pod has a 256 MB memory limit. Keep allocating until you reach ~200 MB.
    curl http://localhost:8080/memory | jq '.memory.rss_mb'
    ```
 
-2. **Pod status remains Running** while memory < 256 MB
+2. **When RSS exceeds the threshold (~230 MB):**
+   - `GET /health` returns 503 from the app
+   - A background monitor exits the process
+   - Kubernetes restarts the container (liveness probe also fails)
+   - `restartCount` increments in `kubectl get pods`
 
-3. **At ~256 MB limit:**
-   - Pod status changes to `Terminating`
-   - Pod is killed due to OOMKilled (Out-Of-Memory)
-   - Deployment restarts the pod automatically
-   - Watch the pod name change in the `-w` terminal
-   - Restart count increments
+3. **If you continue allocating beyond 256 MB:**
+   - Kubernetes may kill the container with `OOMKilled`
+   - You’ll see termination reasons reflecting OOM in `describe pod`
 
-4. **New pod starts fresh:**
-   - Memory usage resets to ~60-80 MB (baseline)
+4. **After restart:**
+   - Memory usage resets to baseline (~30-80 MB)
    - You can allocate again
 
 ### Step D — View pod details
@@ -196,18 +219,14 @@ Check why a pod was killed:
 kubectl describe pod <pod-name> -n resource-limiter
 ```
 
-Look for in the **Events** section:
-```
-Killing container due to memory limit
-OOMKilled: true
-```
+In the **Events** section you may see either a clean restart (process exited due to monitor) or OOM-related messages if you exceeded the 256 MB Kubernetes limit.
 
-Or in **Container Status**:
+Example OOMKilled:
 ```
 Last State:
-  Terminated
-    Reason: OOMKilled
-    Exit Code: 137
+   Terminated
+      Reason: OOMKilled
+      Exit Code: 137
 ```
 
 ---
@@ -222,11 +241,11 @@ chmod +x ./scripts/test-memory-limiter.sh
 ```
 
 This script:
-- Allocates 50 MB at a time
-- Waits 5 seconds between allocations
-- Stops at 250 MB total
+- Allocates 50 MB at a time (configurable)
+- Waits 5 seconds between allocations (configurable)
+- Stops at 250 MB total (configurable)
 - Shows pod status and memory info at each step
-- Detects OOMKilled events
+- Detects health failures and restarts (and OOMKilled if you exceed 256 MB)
 
 ---
 

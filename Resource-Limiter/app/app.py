@@ -20,12 +20,43 @@ import os
 import psutil
 import json
 from datetime import datetime
+import sys
+import threading
+import time
 
 app = Flask(__name__)
 
 # Global list to hold allocated memory blocks
 # Each element is a list of integers, consuming memory
 allocated_memory = []
+
+# Memory limit threshold (in MB) - when to consider the pod unhealthy
+# Default 230 MB; override via env var `MEMORY_THRESHOLD_MB`
+MEMORY_THRESHOLD_MB = int(os.getenv('MEMORY_THRESHOLD_MB', '230'))
+
+# Counter for allocation failures - if app keeps failing to allocate, it should exit
+allocation_failure_count = 0
+MAX_ALLOCATION_FAILURES = 5
+
+def _memory_monitor_loop():
+    """Background monitor: if RSS exceeds threshold, exit process.
+    This guarantees a container restart even if probes are delayed.
+    """
+    while True:
+        try:
+            process = psutil.Process(os.getpid())
+            rss_mb = process.memory_info().rss / (1024 * 1024)
+            if rss_mb > MEMORY_THRESHOLD_MB:
+                print(f"[FATAL] Memory monitor: RSS {rss_mb:.2f}MB > threshold {MEMORY_THRESHOLD_MB}MB. Exiting.")
+                # Exit the process to trigger container restart
+                sys.exit(1)
+        except Exception as e:
+            print(f"[WARN] Memory monitor error: {e}")
+        time.sleep(2)
+
+def start_memory_monitor():
+    t = threading.Thread(target=_memory_monitor_loop, daemon=True)
+    t.start()
 
 def get_memory_usage():
     """
@@ -56,6 +87,8 @@ def allocate_memory_mb(mb):
     Returns:
         bool: True if successful, False otherwise
     """
+    global allocation_failure_count
+    
     try:
         # 1 MB = 1,048,576 bytes
         # Each int in Python is ~28 bytes
@@ -67,8 +100,21 @@ def allocate_memory_mb(mb):
         memory_block = list(range(total_integers))
         allocated_memory.append(memory_block)
         
+        # Reset failure count on success
+        allocation_failure_count = 0
+        mem = get_memory_usage()
+        print(f"[ALLOC] +{mb}MB; RSS={mem['rss_mb']}MB; blocks={len(allocated_memory)}")
         return True
     except MemoryError:
+        allocation_failure_count += 1
+        print(f"[CRITICAL] MemoryError on allocation attempt #{allocation_failure_count}")
+        
+        # If we've failed multiple times, the system is under severe memory pressure
+        # Trigger a graceful shutdown so Kubernetes can restart us
+        if allocation_failure_count >= MAX_ALLOCATION_FAILURES:
+            print(f"[FATAL] Hit {MAX_ALLOCATION_FAILURES} allocation failures - exiting to trigger pod restart")
+            sys.exit(1)
+        
         return False
     except Exception as e:
         print(f"Error allocating memory: {e}")
@@ -200,10 +246,29 @@ def deallocate():
 def health():
     """
     Health check endpoint for Kubernetes probes.
+    Returns 503 (Service Unavailable) when memory usage is too high.
+    This will cause the liveness probe to fail and trigger pod restart.
     """
-    return jsonify({'status': 'healthy'}), 200
+    mem = get_memory_usage()
+    rss_mb = mem['rss_mb']
+    
+    # If memory usage exceeds threshold, report unhealthy
+    if rss_mb > MEMORY_THRESHOLD_MB:
+        print(f"[WARNING] Health check FAILED: Memory {rss_mb}MB exceeds threshold {MEMORY_THRESHOLD_MB}MB")
+        return jsonify({
+            'status': 'unhealthy',
+            'reason': f'Memory usage {rss_mb}MB exceeds limit {MEMORY_THRESHOLD_MB}MB',
+            'memory': mem
+        }), 503
+    
+    return jsonify({
+        'status': 'healthy',
+        'memory': mem
+    }), 200
 
 if __name__ == '__main__':
     # Run Flask app on port 5000
     # Using threaded mode for simplicity
+    # Start background memory monitor
+    start_memory_monitor()
     app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)

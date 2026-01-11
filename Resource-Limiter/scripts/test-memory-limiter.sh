@@ -16,7 +16,7 @@ set -euo pipefail
 # Parameters:
 #   --increment  MB to allocate per step (default: 50)
 #   --max        Max MB to allocate before stopping (default: 250)
-#   --delay      Seconds between allocations (default: 5)
+#   --delay      Seconds between allocations (default: 1)
 #
 # What to observe:
 #   - Pod memory usage grows with each allocation
@@ -29,7 +29,7 @@ NAMESPACE="resource-limiter"
 LABEL_SELECTOR="app=memory-limiter"
 INCREMENT=50          # MB per step
 MAX_MB=250            # Stop after this much
-DELAY=5               # Seconds between allocations
+DELAY=1               # Seconds between allocations
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
     --max) MAX_MB="$2"; shift 2;;
     --delay) DELAY="$2"; shift 2;;
     -h|--help) 
-      echo "Usage: $0 [--increment 50] [--max 250] [--delay 5]"
+      echo "Usage: $0 [--increment 50] [--max 250] [--delay 1]"
       exit 0;;
     *) echo "Unknown arg: $1"; exit 1;;
   esac

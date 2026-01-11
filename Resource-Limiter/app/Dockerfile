@@ -14,6 +14,5 @@ COPY app.py .
 # Expose port 5000 for Flask
 EXPOSE 5000
 
-# Run with gunicorn (production WSGI server)
-# Using 2 worker processes for simplicity
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "30", "app:app"]
+# Run the Flask app directly so process exit restarts container
+CMD ["python", "app.py"]

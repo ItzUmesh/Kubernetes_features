@@ -42,6 +42,12 @@ A Flask application that allows you to:
 - Provides memory usage stats (RSS, VMS, percentage)
 - Safely limits allocations (max 800 MB per request)
 - Returns JSON responses for easy parsing
+- Health returns 503 when memory exceeds an app-configured threshold
+- Background monitor exits the process to trigger a clean pod restart
+
+### Configuration
+
+- `MEMORY_THRESHOLD_MB` (env): default `230`. When RSS exceeds this, `/health` returns 503 and a background monitor exits the process so Kubernetes restarts the pod.
 
 ## Resource Limits Explained
 
@@ -65,10 +71,14 @@ resources:
 **CPU Limit (500m = 0.5 core):**
 - Pod is throttled — CPU time is limited, but the process continues running.
 
-**Memory Limit (256 MB):**
-- Pod is **OOMKilled** (Out-Of-Memory Killed) — the container is forcibly terminated.
-- The Deployment controller detects the failure and restarts the pod.
-- Restart count in `kubectl get pods` increments.
+**App Threshold (~230 MB by default):**
+- `/health` returns 503 when RSS crosses the threshold
+- A background monitor exits the process; Kubernetes restarts the container
+- `restartCount` increments in `kubectl get pods`
+
+**Kubernetes Memory Limit (256 MB):**
+- If RSS grows beyond the pod limit, Kubernetes may **OOMKill** the container
+- You’ll see `Reason: OOMKilled` in `describe pod` and restart behavior
 
 ## Quick Start
 
@@ -129,11 +139,14 @@ curl -X POST http://localhost:8080/allocate?mb=50
 
 # Check memory usage
 curl http://localhost:8080/memory
+
+# Health
+curl http://localhost:8080/health
 ```
 
-### 5. Watch Kubernetes Throttle/Kill the Pod
+### 5. Trigger Health Failure and Observe Restarts
 
-Keep running allocations until you hit the 256 MB limit:
+Keep running allocations until you cross the app threshold (~230 MB) or the Kubernetes limit (256 MB):
 
 ```bash
 for i in {1..6}; do 
@@ -147,9 +160,17 @@ done
 
 **What to observe:**
 - Pod memory usage increases with each allocation
-- At ~256 MB, pod may be OOMKilled
-- Pod status changes to `Terminating` then restarts
+- At ~230 MB, `/health` returns 503; the process exits and the pod restarts
+- If you exceed 256 MB, Kubernetes may OOMKill the container
 - Restart count increments in `kubectl get pods`
+
+Tip: to stress a single replica instead of load-balancing via the Service, port-forward directly to one pod:
+```bash
+POD=$(kubectl get pod -n resource-limiter -l app=memory-limiter -o jsonpath='{.items[0].metadata.name}')
+kubectl port-forward -n resource-limiter pod/$POD 9090:5000
+
+# Then use http://localhost:9090 for requests
+```
 
 ### 6. View Pod Details
 
@@ -170,6 +191,8 @@ chmod +x ./scripts/test-memory-limiter.sh
 ```
 
 This automates memory allocation in steps, observing pod behavior.
+
+It can also be used with a direct pod port-forward (`9090:5000`) to observe `restartCount` on a specific pod.
 
 ## Resource Quota
 
@@ -224,6 +247,8 @@ Ensure service exists:
 kubectl get svc -n resource-limiter
 ```
 
+If a local port (e.g., 8080 or 9090) is already in use, pick a different one: `9191:80`.
+
 ### Pod won't allocate memory (allocation fails)
 
 **Cause:** Already at memory limit.
@@ -235,6 +260,9 @@ curl -X POST http://localhost:8080/deallocate?mb=50
 
 # Check memory usage
 curl http://localhost:8080/memory
+
+# Health (503 when threshold exceeded)
+curl http://localhost:8080/health
 ```
 
 ### System running out of memory
