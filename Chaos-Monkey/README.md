@@ -24,31 +24,31 @@ Build image locally (example):
 
 ```bash
 # From the workspace root
-docker build -t chaos-monkey-app:latest -f "/home/testuser/Documents/Practise/Chaos Monkey/app/Dockerfile" "/home/testuser/Documents/Practise/Chaos Monkey/app"
+docker build -t chaos-monkey-app:latest -f "/home/testuser/Documents/Practise/Chaos-Monkey/app/Dockerfile" "/home/testuser/Documents/Practise/Chaos-Monkey/app"
 
 # For kind: kind load docker-image chaos-monkey-app:latest
-# For minikube: eval $(minikube docker-env) && docker build -t chaos-monkey-app:latest "/home/testuser/Documents/Practise/Chaos Monkey/app"
+# For minikube: eval $(minikube docker-env) && docker build -t chaos-monkey-app:latest "/home/testuser/Documents/Practise/Chaos-Monkey/app"
 ```
 
 Deploy to Kubernetes:
 
 ```bash
-kubectl apply -f "/home/testuser/Documents/Practise/Chaos Monkey/k8s/deployment.yaml"
-kubectl apply -f "/home/testuser/Documents/Practise/Chaos Monkey/k8s/service.yaml"
+kubectl apply -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/deployment.yaml"
+kubectl apply -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/service.yaml"
 kubectl get pods -l app=chaos-monkey
 ```
 
 Run the chaos script (will run until you press Ctrl-C):
 
 ```bash
-chmod +x "/home/testuser/Documents/Practise/Chaos Monkey/chaos/chaos-monkey.sh"
-cd "/home/testuser/Documents/Practise/Chaos Monkey/chaos"
+chmod +x "/home/testuser/Documents/Practise/Chaos-Monkey/chaos/chaos-monkey.sh"
+cd "/home/testuser/Documents/Practise/Chaos-Monkey/chaos"
 ./chaos-monkey.sh --namespace default --label app=chaos-monkey --interval 5
 ```
 
 Stopping the test
 - Press Ctrl-C in the terminal running the chaos script to stop deleting pods.
-- Optionally remove the deployment: `kubectl delete -f "/home/testuser/Documents/Practise/Chaos Monkey/k8s/deployment.yaml"`.
+- Optionally remove the deployment: `kubectl delete -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/deployment.yaml"`.
 
 Notes for beginners
 - Deleting a pod does not delete the Deployment. The Deployment controller immediately notices and creates a replacement pod to maintain the desired replica count.
