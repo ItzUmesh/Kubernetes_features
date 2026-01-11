@@ -66,9 +66,9 @@ trap 'echo; echo "Stopping Chaos Monkey"; exit 0' SIGINT SIGTERM
 # Main loop: run forever until user interrupts
 while true; do
   # Get the list of pod names for the selector in the namespace.
-  # jsonpath returns each pod name; mapfile reads them into the 'pods' array.
+  # Use jq to parse JSON and extract pod names, one per line.
   # Redirect stderr to /dev/null to avoid noisy output if there are no pods or kubectl fails.
-  mapfile -t pods < <(kubectl get pods -n "$NAMESPACE" -l "$LABEL_SELECTOR" -o jsonpath='{range .items[*]}{.metadata.name}\n{end}' 2>/dev/null || true)
+  mapfile -t pods < <(kubectl get pods -n "$NAMESPACE" -l "$LABEL_SELECTOR" -o json 2>/dev/null | jq -r '.items[].metadata.name' || true)
 
   # If we didn't find any pods, print a helpful message and retry after the interval.
   if [ ${#pods[@]} -eq 0 ]; then
