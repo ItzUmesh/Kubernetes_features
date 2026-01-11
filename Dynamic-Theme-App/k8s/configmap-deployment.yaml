@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dynamic-theme-demo
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: theme-config
+  namespace: dynamic-theme-demo
+data:
+  theme.conf: |
+    # Dynamic Theme Configuration
+    # Edit this ConfigMap to change the app's theme
+    background_color=#3498db
+    theme_name=Blue
+    title=Dynamic Theme App - Blue Theme
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theme-app
+  namespace: dynamic-theme-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: theme-app
+  template:
+    metadata:
+      labels:
+        app: theme-app
+    spec:
+      containers:
+      - name: app
+        image: dynamic-theme-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: PORT
+          value: "5000"
+        
+        # Mount the ConfigMap as a file in the pod
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        
+        # Health check
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      
+      # Define the volume that references the ConfigMap
+      volumes:
+      - name: config
+        configMap:
+          name: theme-config
+          items:
+          - key: theme.conf
+            path: theme.conf
