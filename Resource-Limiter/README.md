@@ -1,6 +1,6 @@
 # Resource Limiter — Kubernetes Resource Limits & Quotas Demo
 
-Learn how requests, limits, and quotas shape pod behavior — and what happens when a container blows past its budget.
+Hands-on lab for requests, limits, and quotas: see how scheduling works, feel CPU throttling, and watch pods restart when they exceed their memory budget.
 
 ## What This Project Teaches
 

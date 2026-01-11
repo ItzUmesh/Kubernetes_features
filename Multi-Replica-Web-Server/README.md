@@ -1,6 +1,6 @@
 # Multi-Replica Web Server — Kubernetes Load Balancing Demo
 
-See how a Kubernetes Service spreads traffic across 5 replicas, which pod handled your request, and why port-forwarding shows only one.
+See how a Kubernetes Service fans traffic across 5 replicas, how to confirm which pod served each request, and why port-forwarding hides real load balancing.
 
 ---
 
