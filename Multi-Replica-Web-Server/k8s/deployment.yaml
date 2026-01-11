@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-replica-web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server-deployment
+  namespace: multi-replica-web
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      containers:
+        - name: web-server
+          image: multi-replica-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          
+          # Environment variables: Pass pod info to the app
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            
+            # REPLICA_ID helps identify which replica is responding
+            - name: REPLICA_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          
+          # Resource requests and limits (optional but good practice)
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          
+          # Liveness probe: Keep pod alive if it responds to /health
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          
+          # Readiness probe: Only route traffic to ready pods
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 2
+            periodSeconds: 5
