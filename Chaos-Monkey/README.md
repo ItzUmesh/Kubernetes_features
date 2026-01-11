@@ -1,55 +1,68 @@
-# Chaos Monkey - Kubernetes Pod Deletion Example
+# Chaos Monkey — Kubernetes Pod Deletion Example
 
-This small project demonstrates a simple app deployed to Kubernetes and a "Chaos Monkey" script
-that randomly deletes pods so you can watch Kubernetes recreate them.
+This repository contains a tiny web app and a "Chaos Monkey" script that randomly
+deletes pods so you can observe how Kubernetes (Deployment/ReplicaSet) recreates
+them to maintain the declared replica count.
 
-Contents
-- `app/` - simple Flask app, Dockerfile, and requirements
-- `k8s/` - Kubernetes manifests for Deployment and Service
-- `chaos/` - chaos script that randomly deletes pods
+Repository layout
+- `app/` — simple Flask application, `requirements.txt`, and `Dockerfile`.
+- `k8s/` — `deployment.yaml` and `service.yaml` to run the app in Kubernetes.
+- `chaos/` — `chaos-monkey.sh`: script that deletes pods matching a label selector.
+- `PROCEDURE.md` — clear Run / Test / Observe / Stop steps for beginners.
 
-Quick overview
-1. Build the app image and load/push it to your cluster (instructions below).
-2. Deploy the Kubernetes manifests: `kubectl apply -f k8s/`.
-3. Run the chaos script: `./chaos/chaos-monkey.sh` to randomly delete pods.
-4. Stop the script with Ctrl-C and observe pods being recreated automatically.
+Summary
+1. Build the container image and make it available to your cluster (local or remote).
+2. Deploy the Kubernetes manifests in `k8s/`.
+3. Start the chaos script in `chaos/` to delete pods at an interval.
+4. Observe Kubernetes recreating pods; stop the test when done.
 
-Supported local workflows
-- Minikube: use `minikube image build -t <image>` or `eval $(minikube docker-env)` then `docker build`.
-- Kind: use `docker build -t <image>` then `kind load docker-image <image>`.
+Build and load image (examples)
 
-Example commands (replace image name as shown below):
-
-Build image locally (example):
+From this project root you can build the image locally. Replace `chaos-monkey-app:latest`
+with the tag you prefer.
 
 ```bash
-# From the workspace root
-docker build -t chaos-monkey-app:latest -f "/home/testuser/Documents/Practise/Chaos-Monkey/app/Dockerfile" "/home/testuser/Documents/Practise/Chaos-Monkey/app"
+# Build image using local Docker
+docker build -t chaos-monkey-app:latest -f ./app/Dockerfile ./app
 
-# For kind: kind load docker-image chaos-monkey-app:latest
-# For minikube: eval $(minikube docker-env) && docker build -t chaos-monkey-app:latest "/home/testuser/Documents/Practise/Chaos-Monkey/app"
+# For kind: load the image into the cluster
+kind load docker-image chaos-monkey-app:latest
+
+# For minikube: use the minikube docker daemon
+eval $(minikube docker-env) && docker build -t chaos-monkey-app:latest ./app
 ```
 
-Deploy to Kubernetes:
+Deploy to Kubernetes
 
 ```bash
-kubectl apply -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/deployment.yaml"
-kubectl apply -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/service.yaml"
+kubectl apply -f ./k8s/deployment.yaml
+kubectl apply -f ./k8s/service.yaml
 kubectl get pods -l app=chaos-monkey
 ```
 
-Run the chaos script (will run until you press Ctrl-C):
+Run the chaos script
 
 ```bash
-chmod +x "/home/testuser/Documents/Practise/Chaos-Monkey/chaos/chaos-monkey.sh"
-cd "/home/testuser/Documents/Practise/Chaos-Monkey/chaos"
-./chaos-monkey.sh --namespace default --label app=chaos-monkey --interval 5
+chmod +x ./chaos/chaos-monkey.sh
+./chaos/chaos-monkey.sh --namespace default --label app=chaos-monkey --interval 5
 ```
 
-Stopping the test
-- Press Ctrl-C in the terminal running the chaos script to stop deleting pods.
-- Optionally remove the deployment: `kubectl delete -f "/home/testuser/Documents/Practise/Chaos-Monkey/k8s/deployment.yaml"`.
+Stop the test
+- Press Ctrl-C to stop the running script.
+- Optionally remove the deployment and service:
 
-Notes for beginners
-- Deleting a pod does not delete the Deployment. The Deployment controller immediately notices and creates a replacement pod to maintain the desired replica count.
-- The script simply automates pod deletion so you can observe this behavior.
+```bash
+kubectl delete -f ./k8s/deployment.yaml
+kubectl delete -f ./k8s/service.yaml
+```
+
+Notes & troubleshooting
+
+- Deployment vs Service: A `Deployment` manages pod replicas and updates. A `Service`
+	provides a stable network endpoint and load-balances traffic to pods with matching labels.
+- `set -euo pipefail` is used in the chaos script: it makes the script fail-fast and
+	helps catch bugs (see `chaos/chaos-monkey.sh` comments).
+- If pods show `ErrImagePull` or `ImagePullBackOff`, see `PROCEDURE.md` for troubleshooting
+	and common fixes (wrong image name, private registry, network/DNS issues).
+
+See `PROCEDURE.md` for an explicit Run → Test → Observe → Stop procedure beginners can follow.
