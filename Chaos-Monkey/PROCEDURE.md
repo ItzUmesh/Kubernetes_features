@@ -29,16 +29,38 @@ docker images | grep chaos-monkey-app
 ```
 
 ### Step B — Make the image available to your cluster
-- For kind:
+
+This step makes sure your Kubernetes cluster can find and use the image you just built. Follow the instructions that match your setup:
+
+#### If you are using kind (Kubernetes in Docker):
+1. Make sure you have already built the image as shown in Step A.
+2. Run this command to load your local image into the kind cluster:
   ```bash
   kind load docker-image chaos-monkey-app:latest
   ```
-- For minikube:
+  This tells kind to copy your image into its own internal Docker registry, so your pods can use it.
+
+#### If you are using minikube:
+1. You need to build the image inside minikube’s Docker environment. Run these commands:
   ```bash
   eval $(minikube docker-env)
   docker build -t chaos-monkey-app:latest ./app
   ```
-- For remote clusters: tag and push the image to a registry you can access from the cluster.
+  The first command switches your terminal to use minikube’s Docker. The second command builds the image inside minikube, so it’s available to your cluster.
+
+#### If you are using a remote cluster (like a cloud provider):
+1. You need to upload ("push") your image to a container registry that your cluster can access (like Docker Hub or Google Container Registry).
+2. Tag your image for the registry. For example, if using Docker Hub:
+  ```bash
+  docker tag chaos-monkey-app:latest <your-dockerhub-username>/chaos-monkey-app:latest
+  ```
+3. Push the image to the registry:
+  ```bash
+  docker push <your-dockerhub-username>/chaos-monkey-app:latest
+  ```
+4. Edit your deployment.yaml file and set the image field to the full registry path (e.g., `<your-dockerhub-username>/chaos-monkey-app:latest`).
+
+If you are not sure which method to use, ask your instructor or check how your cluster was set up.
 
 ### Step C — Deploy manifests and confirm deployment creation
 ```bash
