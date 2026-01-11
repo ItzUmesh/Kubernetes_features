@@ -1,6 +1,6 @@
 # Multi-Replica Web Server — Complete Setup Procedure
 
-This document provides **step-by-step instructions** to deploy and test the multi-replica load-balancing project.
+This is the hands-on runbook for deploying and testing the 5-replica load-balancing demo. For a quick conceptual overview and project goals, see the high-level guide in [README.md](README.md); use this document when you are ready to build, deploy, and observe traffic distribution.
 
 ---
 
