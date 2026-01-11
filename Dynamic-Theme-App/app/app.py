@@ -20,7 +20,7 @@ CONFIG_FILE = '/config/theme.conf'
 def load_theme_config():
     """Load theme configuration from the mounted ConfigMap file."""
     default_config = {
-        "background_color": "#3498db",  # Blue
+        "background_color": "#141c22",  # Blue
         "title": "Dynamic Theme App",
         "theme_name": "Blue (default)"
     }

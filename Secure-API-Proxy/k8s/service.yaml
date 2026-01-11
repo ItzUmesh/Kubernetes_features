@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-api-proxy
+  namespace: secure-api-proxy
+spec:
+  selector:
+    app: secure-api-proxy
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
