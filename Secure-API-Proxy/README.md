@@ -31,8 +31,8 @@ A minimal Python proxy that forwards requests to an upstream API. Access is prot
    ```
 
 ## Kubernetes deployment
-- Create Secret (API key) and ConfigMap (upstream URL).
+- Create Secret (API key: `demo-secret-key`) and ConfigMap (upstream URL: `https://httpbin.org`).
 - Deploy Deployment and Service.
-- Hit the Service with the right `X-API-KEY`.
+- Test by hitting the Service with header `X-API-KEY: demo-secret-key`.
 
 See PROCEDURE.md for step-by-step apply/test commands.

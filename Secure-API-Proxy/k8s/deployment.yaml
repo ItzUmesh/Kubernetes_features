@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: proxy
-          image: secure-api-proxy:latest # replace with your registry image
+          image: secure-api-proxy:latest # set your built image via kubectl set image
           imagePullPolicy: IfNotPresent
           env:
             - name: API_KEY
