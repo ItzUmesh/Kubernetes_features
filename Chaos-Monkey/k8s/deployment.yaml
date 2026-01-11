@@ -16,6 +16,7 @@ spec:
         - name: chaos-monkey
           # Replace this image with the tag you build/push/load into your cluster
           image: chaos-monkey-app:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           # Simple readiness/liveness probes help Kubernetes decide pod health

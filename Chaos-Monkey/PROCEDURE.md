@@ -39,9 +39,74 @@ This step makes sure your kind (Kubernetes in Docker) cluster can find and use t
   ```
 2. Load your local image into the kind cluster:
   ```bash
+  kind load docker-image chaos-monkey-app:latest --name umesh-cluster
+  ```
+  If your kind cluster has a custom name (not the default "kind"), specify it with:
+  ```bash
+  kind load docker-image chaos-monkey-app:latest --name <your-cluster-name>
+  ```
+  Replace <your-cluster-name> with the name shown by `kind get clusters` (e.g., umesh-cluster).
+  This command copies your image into kind’s internal Docker registry, so your pods can use it. You only need to do this after building or rebuilding the image.
+
+**Troubleshooting: Image not present locally**
+
+If you see an error like:
+```
+ERROR: image: "chaos-monkey-app:latest" not present locally
+```
+It means you have not built the image yet, or the image name does not match.
+
+1. Make sure you build the image with the exact name:
+   ```bash
+   docker build -t chaos-monkey-app:latest -f ./app/Dockerfile ./app
+   ```
+2. Then load it into your kind cluster as shown above.
+
+**Note:** The image name must match in both the build and load commands. If you use a different name (e.g., chaos-monkey:latest), use that name in both places.
+
+**Troubleshooting: 'no nodes found for cluster "kind"' error**
+
+If you see this error, it means your kind cluster is not running or does not exist.
+
+1. Check if any kind clusters exist:
+  ```bash
+  kind get clusters
+  ```
+  If nothing is listed, you need to create a cluster.
+2. To create a new kind cluster, run:
+  ```bash
+  kind create cluster
+  ```
+  Wait for the cluster to be ready.
+3. After the cluster is running, try loading the image again:
+  ```bash
   kind load docker-image chaos-monkey-app:latest
   ```
-  This command copies your image into kind’s internal Docker registry, so your pods can use it. You only need to do this after building or rebuilding the image.
+
+If you need to delete and recreate the cluster for any reason:
+```bash
+kind delete cluster
+kind create cluster
+```
+
+
+
+**Important:**
+To prevent Kubernetes from always trying to pull the image from Docker Hub, make sure your deployment.yaml includes:
+
+    imagePullPolicy: IfNotPresent
+
+This line should be placed under the chaos-monkey container section, like this:
+
+```yaml
+containers:
+  - name: chaos-monkey
+    image: chaos-monkey-app:latest
+    imagePullPolicy: IfNotPresent
+    # ... other fields ...
+```
+
+This ensures Kubernetes uses the image you loaded into kind.
 
 You can now continue to the next step to deploy your app to the cluster.
 
@@ -52,7 +117,40 @@ kubectl apply -f ./k8s/service.yaml
 # Verify pods begin to appear
 kubectl get pods -l app=chaos-monkey
 ```
+
 Pause and inspect the pod list and events. If pods are not starting, run `kubectl describe pod <pod>` and resolve errors before continuing.
+
+---
+
+### Advanced troubleshooting: Persistent ImagePullBackOff
+
+If you have followed all steps above and your pods are still stuck in ImagePullBackOff or ErrImagePull, try the following advanced steps:
+
+1. **Retag and reload the image with a new tag:**
+  ```bash
+  docker build -t chaos-monkey-app:v2 -f ./app/Dockerfile ./app
+  kind load docker-image chaos-monkey-app:v2 --name umesh-cluster
+  ```
+2. **Edit your deployment.yaml** to use the new image tag:
+  ```yaml
+  image: chaos-monkey-app:v2
+  imagePullPolicy: IfNotPresent
+  ```
+3. **Delete the old deployment and pods:**
+  ```bash
+  kubectl delete deployment chaos-monkey-deployment
+  kubectl delete pod -l app=chaos-monkey
+  ```
+4. **Re-apply the deployment:**
+  ```bash
+  kubectl apply -f ./k8s/deployment.yaml
+  ```
+5. **Watch the pods:**
+  ```bash
+  kubectl get pods -l app=chaos-monkey -w
+  ```
+
+This process forces Kubernetes to use the new image and clears any old references or cache issues. If you still encounter issues, double-check all image names, tags, and context, and seek help with your exact error messages and steps taken.
 
 ---
 
