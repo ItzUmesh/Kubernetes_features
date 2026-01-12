@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upstream-config
+  namespace: secure-api-proxy
+data:
+  UPSTREAM_URL: https://httpbin.org

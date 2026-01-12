@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-api-proxy
+  namespace: secure-api-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secure-api-proxy
+  template:
+    metadata:
+      labels:
+        app: secure-api-proxy
+    spec:
+      containers:
+        - name: proxy
+          image: secure-api-proxy:latest # set your built image via kubectl set image
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-key-secret
+                  key: API_KEY
+            - name: UPSTREAM_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: upstream-config
+                  key: UPSTREAM_URL
+          ports:
+            - containerPort: 8080
