@@ -1,0 +1,58 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: production
+
+namePrefix: prod-
+
+labels:
+  - pairs:
+      environment: production
+
+resources:
+  - ../../base
+
+replicas:
+  - name: env-switcher
+    count: 3
+
+patches:
+  - target:
+      kind: Deployment
+      name: env-switcher
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "PRODUCTION"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: "3"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/2/value
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: "v2.0.0"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "250m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+  
+  - target:
+      kind: Service
+      name: env-switcher
+    patch: |-
+      - op: replace
+        path: /spec/ports/0/nodePort
+        value: 30003

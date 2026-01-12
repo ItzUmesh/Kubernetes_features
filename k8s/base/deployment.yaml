@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: env-switcher
+  labels:
+    app: env-switcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: env-switcher
+  template:
+    metadata:
+      labels:
+        app: env-switcher
+    spec:
+      containers:
+      - name: env-switcher
+        image: env-switcher:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: ENVIRONMENT
+          value: "BASE"
+        - name: REPLICAS
+          value: "1"
+        - name: CPU_LIMIT
+          value: "100m"
+        - name: MEMORY_LIMIT
+          value: "128Mi"
+        - name: API_VERSION
+          value: "v1.0.0"
+        - name: DEBUG_MODE
+          value: "false"
+        - name: PORT
+          value: "5000"
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
