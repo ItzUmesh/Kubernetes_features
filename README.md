@@ -1,4 +1,6 @@
 Author: Umesh NS
+
+
 E-mail: umesh.DBA@hotmail.com
 
 This repository features a series of Kubernetes hands-on projects designed to master cloud-native fundamentals. Each project was developed using VS Code and GitHub Copilot, following a curriculum suggested by Google Gemini to explore core K8s features incrementally.
