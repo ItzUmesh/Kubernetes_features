@@ -1,91 +1,60 @@
-# Kubernetes Features & Practice Projects 🚀
+🟢 Phase 1: Core Fundamentals (The Basics)
+Multi-Replica-Web-Server: Test load balancing and pod replication.
 
-A collection of beginner-friendly Kubernetes projects demonstrating various concepts and patterns.
+Health-Check-Demo: Use Python to create endpoints that fail, testing Liveness and Readiness probes.
 
-## 📚 Projects
+Resource-Limiter: Test CPU/Memory quotas and see how K8s handles OOMKilled events.
 
-### 1. [Environment-Switcher](./Environment-Switcher)
-Use Kustomize overlays to deploy Dev and Prod environments from a single base configuration.
-- **Concepts:** Kustomize, overlays, environment management
-- **Tech:** Python, Kubernetes, Kustomize
+Label-Selector-Lab: Use a Python script to filter and list pods based on custom labels.
 
-### 2. [Chaos-Monkey](./Chaos-Monkey)
-Chaos engineering demo with automated pod disruption.
-- **Concepts:** Chaos engineering, resilience testing
-- **Tech:** Python, Bash, Kubernetes
+🟡 Phase 2: Configuration & Secrets
+Dynamic-Theme-App: Use ConfigMaps to change app behavior without a restart.
 
-### 3. [Dynamic-Theme-App](./Dynamic-Theme-App)
-Dynamic configuration updates using ConfigMaps.
-- **Concepts:** ConfigMaps, dynamic configuration
-- **Tech:** Python, Flask, Kubernetes
+Secure-API-Proxy: Manage sensitive API keys using Kubernetes Secrets.
 
-### 4. [Health-Check-Demo](./Health-Check-Demo)
-Liveness and readiness probes demonstration.
-- **Concepts:** Health checks, probe configuration
-- **Tech:** Python, Flask, Kubernetes
+Environment-Switcher: Use Kustomize to manage Dev vs. Prod environments.
 
-### 5. [Multi-Replica-Web-Server](./Multi-Replica-Web-Server)
-Load balancing and service routing with multiple replicas.
-- **Concepts:** Load balancing, services, replicas
-- **Tech:** Python, Flask, Kubernetes
+Config-Hot-Reloader: Write a Python "watcher" that detects when a ConfigMap changes and restarts the app logic.
 
-### 6. [Resource-Limiter](./Resource-Limiter)
-Resource quotas and limits demonstration.
-- **Concepts:** Resource management, quotas, limits
-- **Tech:** Python, Kubernetes
+🔵 Phase 3: Resilience & Scheduling
+Chaos-Monkey: Use the Python K8s client to randomly delete pods and watch them self-heal.
 
-### 7. [Secure-API-Proxy](./Secure-API-Proxy)
-Secrets and ConfigMaps for secure configuration.
-- **Concepts:** Secrets, ConfigMaps, security
-- **Tech:** Python, Flask, Kubernetes
+Node-Affinity-Router: Force pods onto specific nodes (e.g., "high-memory" or "gpu" labels).
 
-## 🎯 Learning Path
+Taint-and-Toleration-Test: Secure a node so only specific "authorized" pods can land there.
 
-**Recommended order for beginners:**
-1. Multi-Replica-Web-Server (basics)
-2. Health-Check-Demo (probes)
-3. Dynamic-Theme-App (ConfigMaps)
-4. Resource-Limiter (resource management)
-5. Environment-Switcher (Kustomize)
-6. Secure-API-Proxy (Secrets)
-7. Chaos-Monkey (advanced)
+Topology-Spreader: Ensure replicas are spread across different availability zones (AZs).
 
-## 🛠️ Prerequisites
+🟠 Phase 4: Storage & State
+Persistent-Guestbook: Test PersistentVolumes (PV) and Claims (PVC) with a database like Postgres.
 
-- Docker
-- Kubernetes (Minikube, Kind, or Docker Desktop)
-- kubectl
-- Basic understanding of containers and Kubernetes
+Stateful-Messenger: Deploy a StatefulSet to give each pod a unique, persistent identity.
 
-## 📖 Each Project Includes
+Storage-Snapshot-Manager: Use Python to automate taking snapshots of your persistent disks.
 
-- ✅ **README.md** - Project overview and concepts
-- ✅ **PROCEDURE.md** - Step-by-step testing guide
-- ✅ **Application code** - Python/Flask apps
-- ✅ **Kubernetes manifests** - YAML configurations
-- ✅ **Dockerfile** - Container image definition
+🔴 Phase 5: Networking & Security
+Ingress-Controller-Setup: Route traffic to multiple Python services via subdomains using Nginx Ingress.
 
-## 🚀 Quick Start
+Network-Firewall-Demo: Use NetworkPolicies to block all traffic except for a specific whitelist.
 
-```bash
-# Clone the repository
-git clone https://github.com/ItzUmesh/Kubernetes_features.git
-cd Kubernetes_features
+RBAC-Role-Player: Create restricted ServiceAccounts for your Python scripts to limit their API access.
 
-# Navigate to any project
-cd Environment-Switcher
+Gateway-API-Lab: Test the modern replacement for Ingress to handle advanced traffic splitting.
 
-# Follow the PROCEDURE.md for detailed steps
-```
+🟣 Phase 6: Scaling & Automation (Senior Level)
+HPA-Stress-Tester: Write a Python "load generator" to trigger Horizontal Pod Autoscaling.
 
-## 🤝 Contributing
+VPA-Right-Sizer: Use the Vertical Pod Autoscaler to automatically adjust pod CPU/RAM limits.
 
-Feel free to add more projects or improve existing ones!
+CronJob-Cleaner: Create a CronJob that runs a Python script to clean up old images or temp logs.
 
-## 📝 License
+Init-Container-Validator: Use an Init-Container to check if a DB is ready before the main app starts.
 
-Educational projects - free to use and modify for learning purposes.
+💎 Phase 7: Extensibility (Platform Engineer Level)
+Custom-Resource (CRD) Demo: Define your own object type in the K8s API (e.g., a "DatabaseBackup" object).
 
----
+Python-Operator-Lab: Write a real Kubernetes Operator (using kopf) that automates a task when a CRD is created.
 
-**Happy Learning! 🎓**
+Admission-Webhook: Write a Python service that "validates" deployments and rejects them if they don't have proper tags.
+
+Metric-Exporter: Write a Python script to export custom application metrics to Prometheus.
