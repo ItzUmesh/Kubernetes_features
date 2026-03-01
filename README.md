@@ -1,4 +1,4 @@
-**            ☸️ The Ultimate Kubernetes Feature-Lab (37+ Projects)
+**☸️ The Ultimate Kubernetes Feature-Lab (37+ Projects)
 Deep-diving into the K8s API through Python-driven automation and infrastructure-as-code.**
 
 🟢 Phase 1: Core Fundamentals (The Basics)
