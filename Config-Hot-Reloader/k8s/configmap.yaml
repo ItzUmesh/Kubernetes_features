@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: config-hot-reloader
+data:
+  app-config.json: |
+    {
+      "app_name": "Config Hot-Reloader Demo",
+      "environment": "production",
+      "debug_mode": false,
+      "log_level": "INFO",
+      "feature_flags": {
+        "cache_enabled": true,
+        "analytics": true,
+        "beta_features": false
+      },
+      "theme": {
+        "primary_color": "#3498db",
+        "accent_color": "#e74c3c"
+      }
+    }

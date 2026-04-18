@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-reloader
+  namespace: config-hot-reloader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-reloader
+  template:
+    metadata:
+      labels:
+        app: config-reloader
+    spec:
+      containers:
+      - name: app
+        image: config-hot-reloader:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+        
+        # Mount the ConfigMap as a file
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+          readOnly: false  # Must be writable for Kubernetes to update
+        
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 2
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      
+      # Define volume backed by ConfigMap
+      volumes:
+      - name: config
+        configMap:
+          name: app-config
+          items:
+          - key: app-config.json
+            path: app-config.json
