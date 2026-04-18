@@ -377,6 +377,64 @@ Full response shows:
 
 ---
 
+## Step 17: Stop the Project (Pause or Fully Remove)
+
+Use this when you are done testing and want to stop all running activity.
+
+### Option A — Quick Stop (Keep Resources, Stop App)
+
+This keeps namespace, ConfigMap, Service, and Deployment objects, but stops running pods.
+
+1. Stop foreground terminals:
+  - In the port-forward terminal, press `Ctrl-C`
+  - In the logs terminal, press `Ctrl-C`
+
+2. Scale app to zero replicas:
+```bash
+kubectl scale deployment config-reloader -n config-hot-reloader --replicas=0
+```
+
+3. Verify app is stopped:
+```bash
+kubectl get pods -n config-hot-reloader
+kubectl get deployment config-reloader -n config-hot-reloader
+```
+
+Expected:
+- No running pods
+- Deployment shows `0/0` ready replicas
+
+To restart later:
+```bash
+kubectl scale deployment config-reloader -n config-hot-reloader --replicas=1
+kubectl get pods -n config-hot-reloader -w
+```
+
+### Option B — Full Stop (Complete Cleanup)
+
+This removes everything created by this project.
+
+1. Stop foreground terminals:
+  - In the port-forward terminal, press `Ctrl-C`
+  - In the logs terminal, press `Ctrl-C`
+
+2. Delete the namespace:
+```bash
+kubectl delete namespace config-hot-reloader
+```
+
+3. Verify resources are gone:
+```bash
+kubectl get ns config-hot-reloader
+kubectl get all -n config-hot-reloader
+```
+
+Expected:
+- Namespace not found
+- No resources remaining for this project
+
+---
+
 ## Cleanup
 
 ### Stop port-forward
